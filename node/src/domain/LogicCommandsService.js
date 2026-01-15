@@ -7,63 +7,78 @@ class LogicCommandsService {
 
   // GET /api/files/shared
   async getSharedFiles(userId) {
-    const allFiles = this.fileStorage.getAllFiles();
+    const allFiles = await this.fileStorage.getAllFiles();
+    const result = [];
+    for (const file of allFiles) {
+      if (file.isDeleted === true) continue;
+      if (String(file.ownerId) === String(userId)) continue;
 
-    return allFiles.filter((file) => {
-      if (file.isDeleted === true) return false;
-      if (String(file.ownerId) === String(userId)) return false;
-
-      return this._hasPermission(file, userId);
-    });
+      const hasAccess = await this._hasPermission(file, userId);
+      if (hasAccess) {
+        result.push(file);
+      }
+    }
+    return result;
   }
   //normalize userId (string id or username/email) to id string
-  _normalizeUserId(value) {
+  async _normalizeUserId(value) {
     const key = String(value || "").trim();
     if (!key) return null;
     if (/^\d+$/.test(key)) return key;
     // otherwise try resolve via userStorage
-    const resolved = this._resolveUserId(key);
+    const resolved = await this._resolveUserId(key);
     return resolved ? String(resolved) : null;
   }
 
-  _hasPermission(file, userId) {
-    const me = this._normalizeUserId(userId);
+  async _hasPermission(file, userId) {
+    const me = await this._normalizeUserId(userId);
     if (!me) return false;
     //owner always has access
     if (!Array.isArray(file.permissions)) return false;
     //check if any permission matches
-    return file.permissions.some((p) => {
-      const other = this._normalizeUserId(p.userId);
-      return other && other === me;
-    });
+    for (const p of file.permissions) {
+      const other = await this._normalizeUserId(p.userId);
+      if (other && other === me) return true;
+    }
+    return false;
   }
   //helper to check if user exists in userStorage
-  _userExists(loginOrId) {
+  async _userExists(loginOrId) {
     if (!this.userStorage) return false;
     const key = String(loginOrId || "").trim();
     if (!key) return false;
     // try treat as id
-    if (this.userStorage.findById && this.userStorage.findById(key))
-      return true;
-    // otherwise treat as login (username/email)
-    if (this.userStorage.findByLogin && this.userStorage.findByLogin(key))
-      return true;
-    // not found
+    if (this.userStorage.findById) {
+      const res = await this.userStorage.findById(key);
+      if (res) {
+        return true;
+      }
+    }
+    // otherwise treat as login
+    if (this.userStorage.findByLogin) {
+      const res = await this.userStorage.findByLogin(key);
+      if (res) return true;
+    }
     return false;
   }
   // check if user
-  canEdit(file, userId) {
+  async canEdit(file, userId) {
     //owner can always edit
     if (String(file.ownerId) === String(userId)) return true;
     if (!Array.isArray(file.permissions)) return false;
     //check if user has editor role
-    const user = this._normalizeUserId(userId);
-    return file.permissions.some(
-      (p) => this._normalizeUserId(p.userId) === user && p.role === "editor"
-    );
+    const user = await this._normalizeUserId(userId);
+    for (const p of file.permissions) {
+      const pUserId = await this._normalizeUserId(p.userId); // <--- 4. await
+      if (pUserId === user && p.role === "editor") {
+        return true;
+      }
+    }
+
+    return false;
   }
   // resolve userId from login or id
-  _resolveUserId(loginOrId) {
+  async _resolveUserId(loginOrId) {
     if (!this.userStorage) return null;
 
     const key = String(loginOrId || "").trim();
@@ -71,7 +86,7 @@ class LogicCommandsService {
 
     // try treat as id
     if (this.userStorage.findById) {
-      const byId = this.userStorage.findById(key);
+      const byId = await this.userStorage.findById(key);
       if (byId && byId.id !== undefined && byId.id !== null) {
         return String(byId.id);
       }
@@ -79,7 +94,7 @@ class LogicCommandsService {
 
     // otherwise treat as login (username/email)
     if (this.userStorage.findByLogin) {
-      const byLogin = this.userStorage.findByLogin(key);
+      const byLogin = await this.userStorage.findByLogin(key);
       if (byLogin && byLogin.id !== undefined && byLogin.id !== null) {
         return String(byLogin.id);
       }
@@ -94,8 +109,8 @@ class LogicCommandsService {
     throw error;
   }
   // verify that user is the owner of the file
-  verifyOwner(fileId, userId) {
-    const file = this.tryGetFile(fileId);
+  async verifyOwner(fileId, userId) {
+    const file = await this.tryGetFile(fileId);
     if (String(file.ownerId) !== String(userId)) {
       this.throwError();
     }
@@ -105,9 +120,8 @@ class LogicCommandsService {
   generateId() {
     return Date.now() + "_" + Math.floor(Math.random() * 10000);
   }
-  // try get file or throw 404
-  tryGetFile(id) {
-    const file = this.fileStorage.getFile(id);
+  async tryGetFile(id) {
+    const file = await this.fileStorage.getFile(id);
     if (!file) {
       this.throwError();
     }
@@ -139,9 +153,8 @@ class LogicCommandsService {
     isTrash = false,
     isRecent = false
   ) {
-    const allFiles = this.fileStorage.getAllFiles();
-
-    // IMPORTANT: My Files should contain only files owned by the user.
+    const allFiles = await this.fileStorage.getAllFiles();
+    //My Files should contain only files owned by the user.
     // Shared files are returned ONLY via getSharedFiles().
     const userFiles = allFiles.filter((file) => {
       const isOwner = String(file.ownerId) === String(userId);
@@ -199,18 +212,18 @@ class LogicCommandsService {
     let file;
     //first try owner access
     try {
-      file = this.verifyOwner(id, userId);
+      file = await this.verifyOwner(id, userId);
     } catch (err) {
       isHaveAccess = false;
     }
     //if not owner, try permission access
     if (isHaveAccess == false) {
       try {
-        file = this.tryGetFile(id);
-        isHaveAccess = this._hasPermission(file, userId);
+        file = await this.tryGetFile(id);
+        isHaveAccess = await this._hasPermission(file, userId);
       } catch (err) {}
     }
-
+    if (!file) this.throwError();
     if (file.type !== "file") {
       return { ...file, content: null, image: null };
     }
@@ -234,7 +247,7 @@ class LogicCommandsService {
   // POST /api/files
   async create(user, name, content = "", type = "file", parentId = null) {
     if (parentId) {
-      const parent = this.fileStorage.getFile(parentId);
+      const parent = await this.fileStorage.getFile(parentId);
       if (!parent || parent.type != "folder") {
         this.throwError();
       }
@@ -277,9 +290,7 @@ class LogicCommandsService {
 
   // PATCH /api/files/:id
   async update(id, fields, userId) {
-    // Verify that ONLY the owner can make any changes
-    const file = this.verifyOwner(id, userId);
-
+    const file = await this.verifyOwner(id, userId);
     // Once verified, the owner can do everything:
     file.lastAccessed = new Date().toISOString();
 
@@ -303,36 +314,35 @@ class LogicCommandsService {
       );
       file.size = contentToSave.length;
     }
-    // save changes
-    this.fileStorage.saveFile(file);
+    await this.fileStorage.saveFile(file);
     return file;
   }
   // DELETE /api/files/:id
   async delete(id, userId) {
-    const file = this.verifyOwner(id, userId);
+    const file = await this.verifyOwner(id, userId);
     // If it's already in trash -> permanently delete
     if (file.isDeleted === true) {
-        // delete file content from C++ server (only for real files)
-        if (file.type === "file") {
-            await this._handleGatewayRequest(this.fileGateway.delete(id), "204");
-        }
-        // remove metadata from Node storage
-        this.fileStorage.deleteFile(id);
-            return {};
+      // delete file content from C++ server (only for real files)
+      if (file.type === "file") {
+        await this._handleGatewayRequest(this.fileGateway.delete(id), "204");
+      }
+      // remove metadata from Node storage
+      await this.fileStorage.deleteFile(id);
+      return {};
     }
     // First delete -> move to trash
     file.isDeleted = true;
-    this.fileStorage.saveFile(file);
+    await this.fileStorage.saveFile(file);
     return {};
   }
   // GET /api/files/:id/permissions
   async getPermissions(fileId, userId) {
-    const file = this.verifyOwner(fileId, userId);
+    const file = await this.verifyOwner(fileId, userId);
     return file.permissions || [];
   }
   // POST /api/files/:id/permissions
   async addPermission(fileId, newPermission, ownerId) {
-    const file = this.verifyOwner(fileId, ownerId);
+    const file = await this.verifyOwner(fileId, ownerId);
     //validate new permission
     const rawTarget = String(newPermission.userId || "").trim(); // username OR id
     const role = String(newPermission.role || "").trim();
@@ -340,18 +350,23 @@ class LogicCommandsService {
     if (!rawTarget) this.throwError("bad request", 400);
     if (!role || role === "owner") this.throwError("bad request", 400);
     //check that target user exists
-    const targetId = this._resolveUserId(rawTarget);
+    const targetId = await this._resolveUserId(rawTarget);
     if (!targetId) this.throwError("User not found", 404);
     //owner cannot add self
     if (String(targetId) === String(ownerId))
       this.throwError("bad request", 400);
     //check if permission already exists
-    const normalizedTarget = this._normalizeUserId(targetId);
-    const alreadyExists =
-      Array.isArray(file.permissions) &&
-      file.permissions.some(
-        (p) => this._normalizeUserId(p.userId) === normalizedTarget
-      );
+    const normalizedTarget = await this._normalizeUserId(targetId);
+    let alreadyExists = false;
+    if (Array.isArray(file.permissions)) {
+      for (const p of file.permissions) {
+        const pUser = await this._normalizeUserId(p.userId);
+        if (pUser === normalizedTarget) {
+          alreadyExists = true;
+          break;
+        }
+      }
+    }
     //if already exists, throw error
     if (alreadyExists) this.throwError("bad request", 400);
     //add new permission
@@ -361,12 +376,12 @@ class LogicCommandsService {
       role: role.toLowerCase(),
     };
     file.permissions.push(permission);
-    this.fileStorage.saveFile(file);
+    await this.fileStorage.saveFile(file);
     return permission;
   }
   // PATCH /api/files/:fileId/permissions/:pId
   async updatePermission(fileId, pId, updates, userId) {
-    const file = this.verifyOwner(fileId, userId);
+    const file = await this.verifyOwner(fileId, userId);
     //find the permission
     const permIndex = file.permissions.findIndex((p) => p.id === pId);
     if (permIndex === -1) this.throwError("Permission not found", 404);
@@ -375,12 +390,12 @@ class LogicCommandsService {
       ...file.permissions[permIndex],
       ...updates,
     };
-    this.fileStorage.saveFile(file);
+    await this.fileStorage.saveFile(file);
     return file.permissions[permIndex];
   }
   // DELETE /api/files/:fileId/permissions/:pId
   async deletePermission(fileId, pId, userId) {
-    const file = this.verifyOwner(fileId, userId);
+    const file = await this.verifyOwner(fileId, userId);
     //find the permission
     const permissionIndex = file.permissions.findIndex((p) => p.id === pId);
     if (permissionIndex == -1) {
@@ -392,7 +407,7 @@ class LogicCommandsService {
     }
     //remove the permission
     file.permissions.splice(permissionIndex, 1);
-    this.fileStorage.saveFile(file);
+    await this.fileStorage.saveFile(file);
     return {};
   }
   // quick search
@@ -416,11 +431,11 @@ class LogicCommandsService {
       }
     } catch (err) {}
     const lowerQuery = query.toLowerCase();
-    const allFiles = this.fileStorage.getAllFiles();
+    const allFiles = await this.fileStorage.getAllFiles();
     const results = [];
     for (const file of allFiles) {
       const isOwner = String(file.ownerId) === String(userId);
-      const hasPermission = this._hasPermission(file, userId);
+      const hasPermission = await this._hasPermission(file, userId);
 
       if (!isOwner && !hasPermission) {
         continue;
