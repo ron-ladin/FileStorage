@@ -29,7 +29,6 @@ export default function Register() {
       setError("Permission to access gallery was denied");
       return;
     }
-
     //open the picker
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -40,7 +39,6 @@ export default function Register() {
       //square aspect ratio
       aspect: [1, 1],
     });
-
     //if the user didn't cancel, save the URI
     if (!result.canceled && result.assets?.[0]?.uri) {
       setProfilePictureURL(result.assets[0].uri);
@@ -48,15 +46,29 @@ export default function Register() {
   };
 
   const onRegister = async () => {
+    const finalDisplay = (displayName || "").trim() || username.trim();
+    // default picture so user can choose not to upload one
+    const finalProfilePictureURL = profilePictureURL || "";
     //check if all required fields are filled
-    if (!username || !displayName || !email || !password || !verifyPassword) {
-      setError("All fields are required");
-      return;
+    if (!username || !email || !password || !verifyPassword) {
+        setError("Username, email and passwords are required");
+        return;
     }
-    //check password length (must be at least 8 chars)
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters long");
-      return;
+    //check password validity
+    if (!password) {
+      return "you must enter a password";
+    }
+    if (password.length > 0 && password.length < 8) {
+        setError("password must be at least 8 characters");
+        return;
+    }
+    if (password.length >= 8 && !/[A-Z]/.test(password)) {
+        setError("password must contain at least one uppercase letter");
+        return;
+    }
+    if (password.length >= 8 && !/[0-9]/.test(password)) {
+        setError("password must contain at least one number");
+        return;
     }
     //check password complexity (must contain letters and numbers)
     const hasLetter = /[a-zA-Z]/.test(password);
@@ -72,12 +84,12 @@ export default function Register() {
     }
     //call the register function from context
     const ok = await register({
-      username,
-      email,
-      password,
-      verifyPassword,
-      displayName,
-      profilePictureURL,
+        username: username.trim(),
+        email: email.trim(),
+        password: password,
+        verifyPassword: verifyPassword,
+        displayName: finalDisplay,
+        profilePictureURL: finalProfilePictureURL,
     });
     //if registration succeeded, go to login page
     if (ok) 

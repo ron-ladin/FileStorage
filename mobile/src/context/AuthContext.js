@@ -19,31 +19,45 @@ export function AuthProvider({ children }) {
     setLoading(true);
     setError("");
     try {
-      //send login request to server (POST /tokens)
-      const data = await http.post("/tokens", { login, password });
-      //handle different token field names
-      const nextToken = data?.token || data?.accessToken || "";
-      const nextUser = data?.user || null;
-      if (!nextToken) throw new Error("missing token from server response");
-      setToken(nextToken);
-      //if the server returned the user object, save it.
-      //otherwise, if we got a userId, fetch the user details separately.
-      if (nextUser) {
-        setUser(nextUser);
-      } else if (data?.userId) {
-        const u = await http.get(`/users/${data.userId}`, { token: nextToken });
-        setUser(u);
-      } else {
-        setUser(null);
-      }
-      return true;
+        const identifier = String(login || "").trim();
+        //send login request to server (POST /tokens)
+        const data = await http.post("/tokens", {
+            login: identifier,
+            username: identifier,
+            email: identifier,
+            password,
+        });
+        //handle different token field names
+        const nextToken = data?.token || data?.accessToken || "";
+        const nextUser =
+            data?.user ||
+            (data?.userId
+                ? {
+                    id: data.userId,
+                    //comes from the server
+                    displayName: data.displayName,
+                    image: data.image,
+                }: null);
+
+            setUser(nextUser);
+        //if the server returned the user object, save it.
+        //otherwise, if we got a userId, fetch the user details separately.
+        if (nextUser) {
+            setUser(nextUser);
+        } else if (data?.userId) {
+            const u = await http.get(`/users/${data.userId}`, { token: nextToken });
+            setUser(u);
+        } else {
+            setUser(null);
+        }
+        return true;
     } catch (e) {
-      setError(e?.message || "login failed");
-      setToken("");
-      setUser(null);
-      return false;
+        setError(e?.message || "login failed");
+        setToken("");
+        setUser(null);
+        return false;
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
   const register = async ({

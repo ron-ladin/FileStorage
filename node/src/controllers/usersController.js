@@ -12,6 +12,15 @@ const register = async (req, res, next) => {
     if (password !== verifyPassword) {
       return res.status(400).json({ error: "Passwords don't match" });
     }
+    if (typeof password !== "string" || password.length < 8) {
+      return res.status(400).json({ error: "password must be at least 8 characters" });
+    }
+    if (!/[A-Z]/.test(password)) {
+      return res.status(400).json({ error: "password must contain at least one uppercase letter" });
+    }
+    if (!/[0-9]/.test(password)) {
+      return res.status(400).json({ error: "password must contain at least one number" });
+    }
     const user = await userService.register(req.body || {});
     if (!user) return res.status(400).json({ error: "bad request" });
     return res.status(201).json(user);
