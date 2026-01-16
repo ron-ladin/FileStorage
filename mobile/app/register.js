@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Image, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
-import MainButton from "../src/components/MainButton";
-import { Theme } from "../src/styles/Theme";
-import { useAuth } from "../src/context/AuthContext";
+import MainButton from "../components/MainButton";
+import { Theme } from "../style/Theme";
+import { useAuth } from "../context/AuthContext";
 import * as ImagePicker from "expo-image-picker";
 
 export default function Register() {
@@ -51,24 +51,24 @@ export default function Register() {
     const finalProfilePictureURL = profilePictureURL || "";
     //check if all required fields are filled
     if (!username || !email || !password || !verifyPassword) {
-        setError("Username, email and passwords are required");
-        return;
+      setError("Username, email and passwords are required");
+      return;
     }
     //check password validity
     if (!password) {
       return "you must enter a password";
     }
     if (password.length > 0 && password.length < 8) {
-        setError("password must be at least 8 characters");
-        return;
+      setError("password must be at least 8 characters");
+      return;
     }
     if (password.length >= 8 && !/[A-Z]/.test(password)) {
-        setError("password must contain at least one uppercase letter");
-        return;
+      setError("password must contain at least one uppercase letter");
+      return;
     }
     if (password.length >= 8 && !/[0-9]/.test(password)) {
-        setError("password must contain at least one number");
-        return;
+      setError("password must contain at least one number");
+      return;
     }
     //check password complexity (must contain letters and numbers)
     const hasLetter = /[a-zA-Z]/.test(password);
@@ -84,16 +84,15 @@ export default function Register() {
     }
     //call the register function from context
     const ok = await register({
-        username: username.trim(),
-        email: email.trim(),
-        password: password,
-        verifyPassword: verifyPassword,
-        displayName: finalDisplay,
-        profilePictureURL: finalProfilePictureURL,
+      username: username.trim(),
+      email: email.trim(),
+      password: password,
+      verifyPassword: verifyPassword,
+      displayName: finalDisplay,
+      profilePictureURL: finalProfilePictureURL,
     });
     //if registration succeeded, go to login page
-    if (ok) 
-        router.replace("/login");
+    if (ok) router.replace("/login");
   };
 
   return (
@@ -110,7 +109,8 @@ export default function Register() {
         }}
         placeholder="Username"
         placeholderTextColor={Theme.colors.muted}
-        autoCapitalize="none"/>
+        autoCapitalize="none"
+      />
       <TextInput
         style={styles.input}
         value={displayName}
@@ -119,7 +119,8 @@ export default function Register() {
           setDisplayName(t);
         }}
         placeholder="Display Name(optional)"
-        placeholderTextColor={Theme.colors.muted}/>
+        placeholderTextColor={Theme.colors.muted}
+      />
       <TextInput
         style={styles.input}
         value={email}
@@ -130,7 +131,8 @@ export default function Register() {
         placeholder="Email"
         placeholderTextColor={Theme.colors.muted}
         autoCapitalize="none"
-        keyboardType="email-address"/>
+        keyboardType="email-address"
+      />
       <TextInput
         style={styles.input}
         value={password}
@@ -140,7 +142,8 @@ export default function Register() {
         }}
         placeholder="Password"
         placeholderTextColor={Theme.colors.muted}
-        secureTextEntry/>
+        secureTextEntry
+      />
       <TextInput
         style={styles.input}
         value={verifyPassword}
@@ -154,19 +157,26 @@ export default function Register() {
       />
       {/*image Picker Section */}
       <View style={styles.row}>
-        <MainButton title="Pick Profile Picture(optional)" onPress={pickImage} disabled={loading} />
+        <MainButton
+          title="Pick Profile Picture(optional)"
+          onPress={pickImage}
+          disabled={loading}
+        />
       </View>
       {/*preview the selected image */}
       {!!profilePictureURL && (
         <Image source={{ uri: profilePictureURL }} style={styles.avatar} />
       )}
-      <MainButton 
-        title={loading ? "Creating Account..." : "Register"} 
-        onPress={onRegister} 
-        disabled={loading} 
+      <MainButton
+        title={loading ? "Creating Account..." : "Register"}
+        onPress={onRegister}
+        disabled={loading}
       />
       <View style={{ height: Theme.spacing.m }} />
-      <MainButton title="Back to Login" onPress={() => router.replace("/login")} />
+      <MainButton
+        title="Back to Login"
+        onPress={() => router.replace("/login")}
+      />
     </View>
   );
 }

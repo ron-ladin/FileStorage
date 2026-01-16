@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useColorScheme } from "react-native";
-import { LightTheme, DarkTheme } from "../styles/Theme";
+import { LightTheme, DarkTheme } from "../style/Theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 //Create the Context object
