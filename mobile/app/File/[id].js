@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -25,9 +25,11 @@ export default function FileViewer() {
      Initialize navigation, user authentication, and theme.
      "useLocalSearchParams" retrieves the file ID/Name passed from the Home screen.*/
   const router = useRouter();
-  const { id, name, type } = useLocalSearchParams();
+  // We added 'canEdit' to the params to check permissions
+  const { id, name, type, canEdit } = useLocalSearchParams();
   const { token } = useAuth();
   const { theme } = useTheme();
+  const isEditable = canEdit === "true";
 
   /* State Management
      content: Stores the text of a .txt file.
@@ -133,7 +135,7 @@ export default function FileViewer() {
      Displays the Top Bar with:
      1. Back Button
      2. File Name (Title)
-     3. Save Button (Conditional: only shows if text was edited)*/
+     3. Save Button (Conditional: only shows if text was edited AND user is owner)*/
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.bg }]}
@@ -155,7 +157,8 @@ export default function FileViewer() {
         </Text>
 
         <View style={styles.iconBtn}>
-          {type === "text" && isEditing && (
+          {/*check '&& isEditable' to hide save button for guests */}
+          {type === "text" && isEditing && isEditable && (
             <TouchableOpacity onPress={handleSave} disabled={saving}>
               {saving ? (
                 <ActivityIndicator size="small" color={theme.colors.primary} />
@@ -171,10 +174,11 @@ export default function FileViewer() {
         </View>
       </View>
 
-      {/*  Content Area
+      {/* Content Area
           Dynamically renders either an Image Viewer or a Text Editor.
           - Images include Authorization headers.
-          - Text Input is wrapped in KeyboardAvoidingView for iOS support. */}
+          - Text Input is wrapped in KeyboardAvoidingView for iOS support. 
+          - Text Input is locked (editable=false) if permission is denied. */}
       <View style={styles.contentContainer}>
         {type === "image" ? (
           <Image
@@ -196,17 +200,23 @@ export default function FileViewer() {
                 styles.textArea,
                 {
                   color: theme.colors.text,
-                  backgroundColor: theme.colors.surface,
+                  // Visual cue: Change background if read-only
+                  backgroundColor: isEditable
+                    ? theme.colors.surface
+                    : theme.colors.bg,
                   borderColor: theme.colors.border,
                 },
               ]}
               multiline
               value={content}
+              // Lock keyboard if not owner
+              editable={isEditable}
               onChangeText={(text) => {
                 setContent(text);
                 setIsEditing(true); // Enable save button on user input
               }}
-              placeholder="Start typing..."
+              // Dynamic placeholder based on permission
+              placeholder={isEditable ? "Start typing..." : "Read only view"}
               placeholderTextColor={theme.colors.muted}
               textAlignVertical="top"
             />
