@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
-import MainButton from "../src/components/MainButton";
-import { Theme } from "../src/styles/Theme";
-import { useAuth } from "../src/context/AuthContext";
+import MainButton from "../components/MainButton";
+import { Theme } from "../style/Theme";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const router = useRouter();
@@ -15,14 +15,13 @@ export default function Login() {
   const onLogin = async () => {
     //ensure fields are not empty
     if (!loginValue.trim() || !password.trim()) {
-        setError("Please fill in all fields");
-        return;
+      setError("Please fill in all fields");
+      return;
     }
     //attempt to login using the context function
     const ok = await login({ login: loginValue, password });
     //if login was successful, navigate to the home screen, replace so the user can't go back to login with the 'back' button
-    if (ok) 
-        router.replace("/home");
+    if (ok) router.replace("/home");
   };
 
   return (
@@ -56,15 +55,18 @@ export default function Login() {
         secureTextEntry
       />
 
-      <MainButton 
-        title={loading ? "Loading..." : "Login"} 
-        onPress={onLogin} 
-        disabled={loading} 
+      <MainButton
+        title={loading ? "Loading..." : "Login"}
+        onPress={onLogin}
+        disabled={loading}
       />
 
       <View style={{ height: Theme.spacing.m }} />
       {/* Button to navigate to Register screen we use push here so the user can go back to Login */}
-      <MainButton title="Go to Register" onPress={() => router.push("/register")} />
+      <MainButton
+        title="Go to Register"
+        onPress={() => router.push("/register")}
+      />
     </View>
   );
 }

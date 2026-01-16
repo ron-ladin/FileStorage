@@ -39,20 +39,20 @@ services:
       - ./node:/app
       - /app/node_modules
 
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: frontend
-    ports:
-      - "3000:3000"
-    depends_on:
-      - web
-    environment:
-      - CHOKIDAR_USEPOLLING=true
-    volumes:
-      - ./client:/app
-      - /app/node_modules
+  # frontend:
+  #  build:
+  #    context: .
+  #   dockerfile: Dockerfile
+  #  target: frontend
+  # ports:
+  #  - "3000:3000"
+  #depends_on:
+  #  - web
+  #environment:
+  # - CHOKIDAR_USEPOLLING=true
+  # volumes:
+  #  - ./client:/app
+  # - /app/node_modules
 
 volumes:
   storage_data:
