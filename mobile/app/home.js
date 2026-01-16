@@ -1,7 +1,8 @@
-// app/home.js
-import { useState, useEffect, useCallback } from "react";
-import { StyleSheet, Alert } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+import MainButton from "../components/MainButton";
+import { Theme } from "../style/Theme";
+import { useAuth } from "../context/AuthContext";
 import { useRouter } from "expo-router";
 
 import TopBar from "../components/TopBar";
