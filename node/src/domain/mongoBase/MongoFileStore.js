@@ -55,7 +55,7 @@ class MongoFileStore {
     return files.map((f) => this.docToObj(f));
   }
   async searchFiles(userId, queryText, contentMatchIds = []) {
-    const foundDocs = await this.FileModel.find({
+    const foundDocs = await FileMetadata.find({
       // we need to condition
       // first we are need to be owner or can permission to the file
       //the file need do have the query in the content (get from logic command) or the file name has the query.
