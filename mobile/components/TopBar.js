@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const TopBar = ({
   title = "Drive",
   isSearchMode = false,
-  onSearch,
+  onSearch = () => {},
   onBack,
   profileImage,
   onMenuPress,

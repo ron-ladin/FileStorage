@@ -13,18 +13,21 @@ export default function Home() {
   const router = useRouter();
   const { user, token } = useAuth();
   const { theme } = useTheme();
-
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [files, setFiles] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
   //Fetch Root Files (No ID needed)
   const fetchFiles = useCallback(async () => {
-    if (!token) return; //check if we have user token
+    if (!token) 
+        return; //check if we have user token
 
     setRefreshing(true); //spinner visual for the person who use the app.
     try {
       // first we want all the file the have in the root.
-      const endpoint = `/files`;
+      const endpoint = debouncedQuery
+      ? `/search?q=${encodeURIComponent(debouncedQuery)}` : `/files`;
       const data = await http.get(endpoint, { token });
       setFiles(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -32,11 +35,14 @@ export default function Home() {
     } finally {
       setRefreshing(false); //when we finish stop the spinner.
     }
-  }, [token]); //execute the func only if the token change
+   }, [token, debouncedQuery]); //execute the func only if the token change
 
   useEffect(() => {
-    fetchFiles();
-  }, [fetchFiles]);
+    const t = setTimeout(() => {
+      setDebouncedQuery(String(searchQuery || "").trim());
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
   useFocusEffect(
     useCallback(() => {
@@ -97,6 +103,7 @@ export default function Home() {
       <TopBar
         title="My Drive"
         isSearchMode={true} // Only Home has search
+        onSearch={setSearchQuery}
         onBack={() => {}} // No back action on Home
         profileImage={user?.image || user?.profilePictureURL}
         onMenuPress={() => router.push("/(tabs)/create")}

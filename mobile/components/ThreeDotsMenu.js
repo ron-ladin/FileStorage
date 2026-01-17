@@ -17,7 +17,8 @@ const ThreeDotsMenu = ({ visible, onClose, file, onAction, isTrashMode }) => {
   const { colors, radius, font } = theme;
   const { user } = useAuth();
 
-  if (!visible || !file) return null;
+  if (!file) 
+      return null;
 
   //Build menu based on permission
   const getOptions = () => {

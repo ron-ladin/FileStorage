@@ -34,7 +34,9 @@ const FileList = ({
         <FileCard
           file={item}
           onNavigate={() => onFilePress(item)}
-          onMenuAction={() => onFileMenu(item)}
+          onMenuAction={
+            typeof onFileMenu === "function" ? () => onFileMenu(item) : undefined
+          }
         />
       )}
       //Style related props

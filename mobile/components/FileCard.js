@@ -16,7 +16,7 @@ const getFileSettings = (file) => {
   return { color: "#94A3B8", label: "?" };
 };
 
-const FileCard = ({ file, onNavigate, onMenuAction }) => {
+const FileCard = ({ file, onNavigate, onMenuAction, onLongPress }) => {
   //connect to the theme
   const { theme } = useTheme();
   const { colors, spacing, radius, font } = theme;
@@ -26,6 +26,8 @@ const FileCard = ({ file, onNavigate, onMenuAction }) => {
   return (
     <TouchableOpacity
       onPress={onNavigate} //press on the file bring us to the file page and open the text, pic..
+      onLongPress={onLongPress} //Long press can also open the options menu
+      delayLongPress={250}  //how long to hold before triggering
       style={[
         styles.cardLayout,
         {
@@ -88,18 +90,20 @@ const FileCard = ({ file, onNavigate, onMenuAction }) => {
       </View>
       {/*Right Section: Action Menu*/}
       {/*Stops propagation so we don't trigger onNavigate and dont go  inside the file */}
-      <TouchableOpacity onPress={onMenuAction} style={styles.menuBtn}>
-        <Text
-          style={{
-            color: colors.text,
-            fontSize: font.title,
-            fontWeight: "bold",
-            lineHeight: font.title,
-          }}
-        >
-          ⋮
-        </Text>
-      </TouchableOpacity>
+      {typeof onMenuAction === "function" && (
+        <TouchableOpacity onPress={onMenuAction} style={styles.menuBtn}>
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: font.title,
+              fontWeight: "bold",
+              lineHeight: font.title,
+            }}
+          >
+            ⋮
+          </Text>
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 };
