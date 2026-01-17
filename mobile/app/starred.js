@@ -102,8 +102,8 @@ export default function StarredScreen() {
         text: "Move to Trash",
         onPress: async () => {
           try {
-//logic to delete file
-            await http.delete(`/files/${fileId}`, { token });
+            //logic to delete file
+            await http.del(`/files/${fileId}`, { token });
             fetchFiles();
           } catch (e) {
             Alert.alert("Error", e?.message || "Failed to move to trash");

@@ -71,7 +71,7 @@ export default function TrashScreen() {
         onPress: async () => {
           try {
             //hard delete from database
-            await http.delete(`/files/${fileId}`, { token });
+            await http.del(`/files/${fileId}`, { token });
             fetchFiles();
           } catch (e) {
             Alert.alert("Error", e?.message || "Failed to delete forever");
