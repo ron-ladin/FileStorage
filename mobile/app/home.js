@@ -11,6 +11,7 @@ import { useTheme } from "../context/ThemeContext";
 import { http } from "../api/http";
 import { API_BASE } from "../api/config";
 import ThreeDotsMenu from "../components/ThreeDotsMenu";
+import RenameModal from "../components/RenameModal";
 
 export default function Home() {
   const router = useRouter();
@@ -22,6 +23,8 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [renameVisible, setRenameVisible] = useState(false);
+  const [renameInitial, setRenameInitial] = useState("");
 
   //Fetch Logic (Get list of files)
   const fetchFiles = useCallback(async () => {
@@ -62,6 +65,61 @@ export default function Home() {
     }, [fetchFiles])
   );
 
+  //function to open rename modal
+  const renameFile = (file) => {
+    const fileId = file?.id || file?._id;
+    if (!fileId)
+      return;
+    //set state for modal
+    setSelectedFile(file);
+    setRenameInitial(file?.name || "");
+    setRenameVisible(true);
+  };
+
+  const onMenuAction = async (actionId, file) => {
+    const fileId = file?.id || file?._id;
+    if (!fileId) return;
+
+    try {
+      if (actionId === "download") {
+        //simulating download by opening the file viewer
+        handleFilePress(file);
+        return;
+      }
+
+      if (actionId === "toggle_star") {
+        const nextStar = !file.isStarred;
+        //update star status on server
+        await http.patch(`/files/${fileId}`, { isStarred: nextStar }, { token });
+        await fetchFiles();
+        return;
+      }
+
+      if (actionId === "delete") {
+        //soft delete the file by updating the flag
+        await http.patch(`/files/${fileId}`, { isDeleted: true }, { token });
+        await fetchFiles();
+        return;
+      }
+
+      if (actionId === "rename") {
+        renameFile(file);
+        return;
+      }
+
+      if (actionId === "share") {
+        const fileId = file?.id || file?._id;
+        router.push({
+          pathname: "/share/[id]",
+          params: { id: fileId, name: file?.name || "File" },
+        });
+        return;
+      }
+    } catch (e) {
+      Alert.alert("Error", e?.message || "Action failed");
+    }
+  };
+
   const handleUpload = async () => {
     try {
       //Open System File Picker
@@ -70,12 +128,10 @@ export default function Home() {
         type: ["image/*", "text/*"],
         copyToCacheDirectory: true, // Important: copies file to a accessible temp location
       });
-
       // User cancelled the picker
-      if (result.canceled) return;
-
+      if (result.canceled) 
+          return;
       const file = result.assets[0];
-
       // Prepare the FormData
       // This allows us to send binary data + metadata in one request
       const formData = new FormData();
@@ -162,6 +218,37 @@ export default function Home() {
         onProfilePress={() => router.push("/(tabs)/account")}
       />
 
+      <RenameModal
+        visible={renameVisible}
+        initialValue={renameInitial}
+        onClose={() => setRenameVisible(false)}
+        onSave={async (nextName) => {
+          const fileId = selectedFile?.id || selectedFile?._id;
+
+          const next = String(nextName || "").trim();
+          if (!fileId) return;
+          if (!next) {
+            Alert.alert("Invalid", "Name is required.");
+            return;
+          }
+          //check if name actually changed
+          if (next === (selectedFile?.name || "")) {
+            setRenameVisible(false);
+            return;
+          }
+
+          try {
+            //send patch request to server
+            await http.patch(`/files/${fileId}`, { name: next }, { token });
+            setRenameVisible(false);
+            //refresh file list
+            await fetchFiles();
+          } catch (e) {
+            Alert.alert("Error", e?.message || "Rename failed");
+          }
+        }}
+      />
+
       <FileList
         files={files}
         onFilePress={handleFilePress}
@@ -180,12 +267,7 @@ export default function Home() {
         visible={menuVisible}
         onClose={() => setMenuVisible(false)}
         file={selectedFile}
-        onAction={(actionId, file) => {
-          if (actionId === "share") {
-            setSelectedFile(file);
-            setShareVisible(true);
-          }
-        }}
+        onAction={onMenuAction}
         isTrashMode={false}
       />
     </SafeAreaView>
