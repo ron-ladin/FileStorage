@@ -15,9 +15,9 @@ import { useFileActions } from "../hooks/useFileActions";
 export default function GenericFileScreen({
   title,
   queryParam,
-  endpoint,
-  allowOpen = true,
   buildMenuActions,
+  allowOpen = true,
+  endpoint = null,
 }) {
   const router = useRouter();
   const { token, logout, user } = useAuth();
