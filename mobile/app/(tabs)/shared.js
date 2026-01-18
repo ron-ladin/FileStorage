@@ -16,34 +16,44 @@ export default function SharedScreen() {
   const router = useRouter();
   const { token, logout, user } = useAuth();
   const { theme } = useTheme();
-
   const [files, setFiles] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-
-//state for custom menu
+  //state for custom menu
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const myId = user?.id || user?._id;
 
-  const fetchFiles = useCallback(async () => {
-    if (!token) return;
-    setRefreshing(true);
-    try {
-      //fetch shared files from server
-      const data = await http.get("/files?shared=true", { token });
-      setFiles(Array.isArray(data) ? data : []);
-    } catch (e) {
-      const msg = e?.message || "Failed to load shared files";
-      if (String(msg).toLowerCase().includes("401")) {
-        //handle unauthorized user
-        logout();
-        router.replace("/login");
-        return;
-      }
-      console.log("Error fetching shared:", e);
-    } finally {
-      setRefreshing(false);
+const fetchFiles = useCallback(async () => {
+  if (!token) return;
+  setRefreshing(true);
+  try {
+    //fetch all files to filter them locally
+    const data = await http.get("/files", { token });
+    const list = Array.isArray(data) ? data : [];
+    //filter files where i have permission but am not owner
+    const sharedWithMe = list.filter((f) => {
+      const perms = Array.isArray(f?.permissions) ? f.permissions : [];
+      //check if my id exists in permissions array
+      const hasMe = perms.some((p) => String(p?.userId) === String(myId));
+      const owner = f?.ownerId ?? f?.owner ?? f?.ownerUserId;
+      const notOwner = String(owner) !== String(myId);
+      return hasMe && notOwner;
+    });
+
+    setFiles(sharedWithMe);
+  } catch (e) {
+    const msg = e?.message || "Failed to load shared files";
+    if (String(msg).toLowerCase().includes("401")) {
+      //handle token expiration
+      logout();
+      router.replace("/login");
+      return;
     }
-  }, [token, logout, router]);
+    console.log("Error fetching shared:", e);
+  } finally {
+    setRefreshing(false);
+  }
+}, [token, logout, router, myId]);
 
   useEffect(() => {
     fetchFiles();
@@ -106,12 +116,19 @@ export default function SharedScreen() {
       }
 
       if (actionId === "remove_shared") {
-        //simple request to remove file from shared view
-        await http.post(`/files/${fileId}/remove_shared`, {}, { token });
-        fetchFiles();
-        return;
+          //get all permissions for this file
+          const perms = await http.get(`/files/${fileId}/permissions`, { token });
+          const arr = Array.isArray(perms) ? perms : [];
+          //find the permission object belonging to me
+          const mine = arr.find((p) => String(p?.userId) === String(myId));
+          if (!mine) 
+              throw new Error("No permission record found for this user.");
+          const pId = mine.id || mine._id;
+          //delete the specific permission
+          await http.delete(`/files/${fileId}/permissions/${pId}`, { token });
+          await fetchFiles();
+          return;
       }
-
     } catch (e) {
       Alert.alert("Error", e?.message || "Action failed");
     }
@@ -120,7 +137,6 @@ export default function SharedScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.bg }]} edges={["top"]}>
       <TopBar title="Shared" isSearchMode={false} onBack={() => router.back()} />
-
       <FileList
         files={files}
         onFilePress={handleFilePress}
