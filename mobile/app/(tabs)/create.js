@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Alert, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import MainButton from "../../components/MainButton";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -8,10 +8,15 @@ import { http } from "../../api/http";
 
 export default function Create() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const { token } = useAuth();
   const { theme } = useTheme();
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const parentId =
+    params?.parentId && String(params.parentId).trim()
+      ? String(params.parentId).trim(): null;
 
   const onCreate = async () => {
     if (!token) {
@@ -28,11 +33,11 @@ export default function Create() {
 
     setLoading(true);
     try {
-      await http.post("/files", { fileName: n, type: "folder", parentId: null }, { token });
+      await http.post("/files", { fileName: n, type: "folder", parentId }, { token });
       setName("");
       // return to home page
       Alert.alert("Success", `Created folder: ${n}`, [
-        { text: "OK", onPress: () => router.replace("/(tabs)") },
+        { text: "OK", onPress: () => router.back() },
       ]);
     } catch (e) {
       Alert.alert("Error", e?.message || "Failed to create folder");

@@ -33,7 +33,7 @@ export default function RecentScreen() {
             onPress: async () => {
               try {
                 //move file to trash
-                await http.delete(`/files/${fileId}`, { token });
+                await http.patch(`/files/${fileId}`, { isDeleted: true }, { token });
                 fetchFiles();
               } catch (e) {
                 Alert.alert("Error", e?.message || "Failed to move to trash");
