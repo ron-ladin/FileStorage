@@ -151,9 +151,9 @@ export default function FolderScreen() {
         currentFolder={folderId}
         onPressCreateFolder={() =>
           router.push({
-            pathname: "/(tabs)/create",
-            params: { parentId: folderId },
-          })
+          pathname: "/(tabs)/create",
+          params: { parentId: folderId, returnToId: folderId, returnToName: name || "Folder" },
+        })
         }
         onPressUpload={handleUploadInFolder}
       />
