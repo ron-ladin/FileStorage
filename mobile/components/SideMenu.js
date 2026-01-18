@@ -30,7 +30,7 @@ export default function SideMenu({ visible, onClose, onNavigate, onLogout, activ
 
   //menu items configuration
   const items = [
-    { id: "home", label: "My Drive", icon: "folder-open", route: "/home" },
+    { id: "home", label: "My Drive", icon: "folder-open", route: "/(tabs)" },
     { id: "recent", label: "Recent", icon: "history", route: "/recent" },
     { id: "starred", label: "Starred", icon: "star-border", route: "/starred" },
     { id: "shared", label: "Shared", icon: "people-outline", route: "/shared" },
