@@ -10,15 +10,7 @@ const PlusBtnMenu = ({
 }) => {
   const { theme } = useTheme();
   const { colors, radius, font } = theme;
-
   const [visible, setVisible] = useState(false);
-
-  //
-  // If we are NOT in the root folder (currentFolder exists),
-  // we do not render anything. The button disappears.
-  if (currentFolder) {
-    return null;
-  }
 
   const handleAction = (action) => {
     setVisible(false); // Close menu
