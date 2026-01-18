@@ -10,7 +10,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { http } from "../api/http";
 import { openFileOrFolder } from "../utils/openFile";
-import { useFileActions } from "../hooks/useFileActions";
+import { useFileActions } from "../Hooks/FileFuncs";
 
 export default function GenericFileScreen({
   title,
