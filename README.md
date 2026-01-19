@@ -1,4 +1,4 @@
-# Advanced-Programming-Project – Exercise 5 (Mobile Drive)
+# Advanced-Programming-Project – Exercise 5
 https://github.com/Advanced-Programming-Project-Ron-Dan/Advanced-Programming-Project-ex5
 
 This project is a complete file storage system featuring a **React Native (Expo) mobile client** and a **Node.js REST API server** (MVC architecture).
@@ -9,7 +9,7 @@ The mobile UI is designed with inspiration from **Google Drive**, offering a cle
 ---
 
 ## System Components
-- **ex2 (C++ TCP Server)** – Responsible for low-level file content storage and content search via TCP.
+- **C++ TCP Server** – Responsible for low-level file content storage and content search via TCP.
 - **node (Node.js / Express API)** – The main backend. Exposes REST endpoints for the mobile app, manages users/metadata in MongoDB, and communicates with the C++ server.
 - **mongo (MongoDB)** – Database for storing user data, file metadata, and directory structure.
 - **mobile (React Native / Expo)** – The frontend client. A native mobile app for Android/iOS allowing users to register, login, and manage their files.
@@ -33,7 +33,7 @@ The mobile UI is designed with inspiration from **Google Drive**, offering a cle
 ## Project Structure (High Level)
 - **mobile/** – React Native Expo application (Screens, Components, Context, API hooks).
 - **node/** – Express API server (Routes, Controllers, Services, Gateways).
-- **ex2/** – C++ TCP server source code.
+- **ex2-3/** – C++ TCP server source code.
 - **docker-compose.yml** – Orchestration for backend services.
 
 ---
@@ -52,7 +52,7 @@ docker-compose up --build
 
 What this does:
 Starts MongoDB.
-Builds and runs the C++ TCP Server (ex2).
+Builds and runs the C++ TCP Server.
 Builds and runs the Node.js API (web), connected to Mongo and the C++ server.
 To stop the services, run: 
 
@@ -64,58 +64,43 @@ Open a new terminal window:
 cd mobile
 npm install
 npx expo start
+
 ⚠️ Important: Connecting to the API (Network Configuration)
 Since the app runs on a mobile device/emulator, it cannot access localhost directly.
-
 Android Emulator: The API URL is usually http://10.0.2.2:5000.
-
 Real Device (LAN): Use your PC's local IP address (e.g., http://192.168.1.15:5000).
-
 Make sure to update the API_BASE URL in: mobile/api/config.js (or the relevant config file) before running the app.
 
-How to Use the App
-Navigation Basics
-Tap a folder to open it.
+# How to Use the App
+## Navigation Basics
+-Tap a folder to open it.
+-Tap a file to view it (Image) or edit it (Text).
+-Back Arrow: Return to the previous screen.
 
-Tap a file to view it (Image) or edit it (Text).
+## Side Menu: Navigate between My Drive, Recent, Starred, Trash, and Shared.
 
-Back Arrow: Return to the previous screen.
+## My Drive (Home)
+-Shows your files and folders.
+-Search: Type in the top bar to filter items by name.
+-Create Folder: Tap the + button -> "Create Folder".
+-Upload: Tap the + button -> "Upload" -> Pick an image or text file.
 
-Side Menu: Navigate between My Drive, Recent, Starred, Trash, and Shared.
+## File Actions (Three-Dots Menu)
+-Tap the three dots (⋮) on any item to open the menu:
+-Download: Saves the file to your device.
+-Rename: Change the file/folder name (extensions are protected).
+-Star: Add/Remove from the "Starred" view.
+-Share: Grant access to another user (enter their username).
+-Delete: Move to Trash.
 
-My Drive (Home)
-Shows your files and folders.
+## File Viewer & Editor
+-Images: View full screen. Owner can replace the image content.
+-Text Files: Owner can edit the text and click Save. Viewer is read-only.
 
-Search: Type in the top bar to filter items by name.
-
-Create Folder: Tap the + button -> "Create Folder".
-
-Upload: Tap the + button -> "Upload" -> Pick an image or text file.
-
-File Actions (Three-Dots Menu)
-Tap the three dots (⋮) on any item to open the menu:
-
-Download: Saves the file to your device.
-
-Rename: Change the file/folder name (extensions are protected).
-
-Star: Add/Remove from the "Starred" view.
-
-Share: Grant "Viewer" access to another user (enter their username).
-
-Delete: Move to Trash.
-
-File Viewer & Editor
-Images: View full screen. Owner can replace the image content.
-
-Text Files: Owner can edit the text and click Save. Viewer is read-only.
-
-Trash & Recovery
-Trash View: Shows deleted items.
-
-Restore: Returns the item to its original folder.
-
-Delete Forever: Permanently removes the file from the system.
+## Trash & Recovery
+-Trash View: Shows deleted items.
+-Restore: Returns the item to its original folder.
+-Delete Forever: Permanently removes the file from the system.
 
 ### How it should look:
 #### 1:
