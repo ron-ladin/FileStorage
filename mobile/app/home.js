@@ -1,20 +1,21 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { StyleSheet, Alert } from "react-native";
+import { StyleSheet, Alert, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
 import TopBar from "../components/TopBar";
 import FileList from "../components/FileList";
 import PlusBtnMenu from "../components/PlusBtnMenu";
-import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
-import { http } from "../api/http";
-import { API_BASE } from "../api/config";
 import ThreeDotsMenu from "../components/ThreeDotsMenu";
 import RenameModal from "../components/RenameModal";
 import SideMenu from "../components/SideMenu";
 import ShareModal from "../components/ShareModal";
+import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
+import { http } from "../api/http";
+import { API_BASE } from "../api/config";
 import { useFileActions } from "../Hooks/FileFuncs";
+
 export default function Home() {
   const router = useRouter();
   const { user, token, logout } = useAuth();
@@ -85,7 +86,9 @@ export default function Home() {
     try {
       if (actionId === "download") {
         //simulating download by opening the file viewer
-        handleFilePress(file);
+        const url = `${API_BASE}/files/${fileId}/download?token=${encodeURIComponent(token)}`;
+        const can = await Linking.canOpenURL(url);
+        await Linking.openURL(url);
         return;
       }
 

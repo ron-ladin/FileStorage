@@ -6,6 +6,7 @@ import {
   Image,
   StyleSheet,
   Alert,
+  Linking,
   ActivityIndicator,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -16,6 +17,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import { API_BASE } from "../../api/config";
 import { http } from "../../api/http";
 
 export default function FileViewer() {
@@ -79,6 +81,20 @@ export default function FileViewer() {
     fetchFileContent();
   }, [id, token, type]);
 
+  const handleDownload = async () => {
+  try {
+    if (!token || !id) return;
+
+    const url = `${API_BASE}/files/${id}/download?token=${encodeURIComponent(token)}`;
+    const can = await Linking.canOpenURL(url);
+    if (!can) throw new Error("Device can't open this URL");
+
+    await Linking.openURL(url);
+  } catch (e) {
+    Alert.alert("Download failed", e?.message || "Download failed");
+  }
+};
+
   /* Save Action (Text Only)
      This function sends the updated text back to the server using a PUT request.
      It handles the 'saving' spinner and error alerts.*/
@@ -123,33 +139,25 @@ export default function FileViewer() {
     >
       <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
-          <MaterialIcons
-            name="arrow-back"
-            size={24}
-            color={theme.colors.text}
-          />
+          <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
 
-        <Text
-          style={[styles.title, { color: theme.colors.text }]}
-          numberOfLines={1}
-        >
+        <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
           {name}
         </Text>
 
         <View style={styles.iconBtn}>
-          {/*check '&& isEditable' to hide save button for guests */}
-          {type === "text" && isEditing && isEditable && (
+          {type === "text" && isEditing && isEditable ? (
             <TouchableOpacity onPress={handleSave} disabled={saving}>
               {saving ? (
                 <ActivityIndicator size="small" color={theme.colors.primary} />
               ) : (
-                <MaterialIcons
-                  name="save"
-                  size={24}
-                  color={theme.colors.primary}
-                />
+                <MaterialIcons name="save" size={24} color={theme.colors.primary} />
               )}
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={handleDownload}>
+              <MaterialIcons name="download" size={24} color={theme.colors.primary} />
             </TouchableOpacity>
           )}
         </View>
