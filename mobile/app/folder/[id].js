@@ -146,7 +146,7 @@ export default function FolderScreen() {
         refreshing={refreshing}
         onRefresh={fetchFiles}
       />
-
+    <View style={styles.fabWrap}>
       <PlusBtnMenu
         currentFolder={folderId}
         onPressCreateFolder={() =>
@@ -157,10 +157,16 @@ export default function FolderScreen() {
         }
         onPressUpload={handleUploadInFolder}
       />
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  fabWrap: {
+    position: "absolute",
+    right: 18,
+    bottom: 80,
+  },
 });
