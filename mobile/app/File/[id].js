@@ -145,9 +145,14 @@ export default function FileViewer() {
           <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
 
-        <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
-          {name}
-        </Text>
+        <View style={styles.titleWrap}>
+          <Text
+            style={[styles.title, { color: theme.colors.text }]}
+            numberOfLines={1}
+            ellipsizeMode="middle">
+            {String(name || "")}
+          </Text>
+        </View>
 
         <View style={styles.rightActions}>
           {type === "text" && isEditing && isEditable ? (
@@ -253,16 +258,10 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    height: 60,
+    height: 64,
     borderBottomWidth: 1,
-  },
-  iconBtn: {
-    width: 40,
-    alignItems: "center",
-    justifyContent: "center",
   },
   backBtn: {
     width: 44,
@@ -271,11 +270,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 12,
   },
+  titleWrap: {
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 8,
+    alignItems: "center",
+  },
   title: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "700",
     flex: 1,
     textAlign: "center",
+    maxWidth: "90%",
     marginHorizontal: 10,
   },
    rightActions: {
@@ -284,19 +290,20 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     width: 74,
-    height: 56,
+    height: 50,
     marginLeft: 8,
-    borderRadius: 14,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+  },
+  actionText: {
+    marginTop: 3,
+    fontSize: 10,
+    fontWeight: "600",
   },
   actionBtnDisabled: {
     opacity: 0.6,
-  },
-  actionText: {
-    marginTop: 4,
-    fontSize: 11,
-    fontWeight: "600",
   },
   contentContainer: {
     flex: 1,
