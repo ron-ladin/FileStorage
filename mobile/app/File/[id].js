@@ -141,7 +141,7 @@ export default function FileViewer() {
       style={[styles.container, { backgroundColor: theme.colors.bg }]}
     >
       <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
 
@@ -149,33 +149,45 @@ export default function FileViewer() {
           {name}
         </Text>
 
-        <View style={styles.iconBtn}>
+        <View style={styles.rightActions}>
           {type === "text" && isEditing && isEditable ? (
-            <TouchableOpacity onPress={handleSave} disabled={saving}>
+            <TouchableOpacity
+              onPress={handleSave}
+              disabled={saving}
+              style={[styles.actionBtn, saving && styles.actionBtnDisabled]}
+            >
               {saving ? (
                 <ActivityIndicator size="small" color={theme.colors.primary} />
               ) : (
-                <MaterialIcons name="save" size={24} color={theme.colors.primary} />
+                <MaterialIcons name="save" size={22} color={theme.colors.primary} />
               )}
+              <Text style={[styles.actionText, { color: theme.colors.primary }]}>Save</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity
-              onPress={async () => {
-                if (type !== "image") 
-                  return handleDownload();
-                if (!isEditable) 
-                  return handleDownload();
-                const next = await handleReplaceContent(id, ["image/*"]);
-                if (typeof next === "string") 
-                  setContent(next);
-                }
-              }
-              >
-              <MaterialIcons
-                name={type === "image" && isEditable ? "edit" : "download"}
-                size={24}
-                color={theme.colors.primary}/>
-            </TouchableOpacity>
+            <>
+              {isEditable && (type === "image" || type === "text") && (
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={async () => {
+                    if (!id) return;
+                    const pickerType = type === "image" ? ["image/*"] : ["text/*"];
+                    const next = await handleReplaceContent(id, pickerType);
+                    if (typeof next === "string") {
+                      setContent(next);
+                      setIsEditing(false);
+                    }
+                  }}
+                >
+                  <MaterialIcons name="swap-horiz" size={22} color={theme.colors.primary} />
+                  <Text style={[styles.actionText, { color: theme.colors.primary }]}>Replace</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity style={styles.actionBtn} onPress={handleDownload}>
+                <MaterialIcons name="download" size={22} color={theme.colors.primary} />
+                <Text style={[styles.actionText, { color: theme.colors.primary }]}>Download</Text>
+              </TouchableOpacity>
+            </>
           )}
         </View>
       </View>
@@ -252,12 +264,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  backBtn: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 12,
+  },
   title: {
     fontSize: 18,
     fontWeight: "bold",
     flex: 1,
     textAlign: "center",
     marginHorizontal: 10,
+  },
+   rightActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  actionBtn: {
+    width: 74,
+    height: 56,
+    marginLeft: 8,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionBtnDisabled: {
+    opacity: 0.6,
+  },
+  actionText: {
+    marginTop: 4,
+    fontSize: 11,
+    fontWeight: "600",
   },
   contentContainer: {
     flex: 1,
