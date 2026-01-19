@@ -31,8 +31,7 @@ export default function SharedScreen() {
       const data = await http.get("/files/shared", { token });
       const list = Array.isArray(data) ? data : [];
       //filter files where i have permission but am not owner
-
-      setFiles(sharedWithMe);
+      setFiles(list);
     } catch (e) {
       const msg = e?.message || "Failed to load shared files";
       if (String(msg).toLowerCase().includes("401")) {
