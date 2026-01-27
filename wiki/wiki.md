@@ -104,4 +104,4 @@ Delete Forever permanently deletes the item.
 ## 13. Search
 Search files/folders by query (e.g., filename; and/or content depending on backend implementation).
 
-![Search](images/Search.png)
+![Search](images/Search.jpeg)
